@@ -1,0 +1,213 @@
+================================================================================
+                    HOW TO ARCHIVE OR SCRAPE MEDIAFIRE FILES USING MF-DL
+================================================================================
+
+Written by themadprogramer | Published on Data Horde
+https://datahorde.org/how-to-archive-or-scrape-mediafire-files-using-mf-dl/
+
+
+INTRODUCTION
+--------------------------------------------------------------------------------
+
+MediaFire is home to millions of files. Their generous upload limits appeal to
+visual artists who can upload high-resolution work, composers and remixers who
+want to host WIP music off-platform, and anyone who wants to upload large files.
+
+Unfortunately, MediaFire doesn't have a search or discovery feature, relying
+entirely on search engine traffic and external linking. There's a lot of
+undiscovered content on MediaFire, and Pyxia's mf-dl tool is one of the first
+tools available for exploring it.
+
+This tutorial covers:
+1. Installing mf-dl
+2. Bulk downloading MediaFire files
+3. Crawling websites for MediaFire links
+
+
+INSTALLATION
+--------------------------------------------------------------------------------
+
+1. Install Python 3 if you don't already have it
+   Download: https://www.python.org/
+
+2. Clone the mf-dl repository:
+   git clone https://github.com/definitelynotguru/mf-dl.git
+   cd mf-dl
+
+3. Install dependencies:
+   python3 -m pip install -r requirements.txt
+
+
+================================================================================
+PART 1: DOWNLOADING FILES WITH MFDL.PY
+================================================================================
+
+mfdl.py is a bulk downloader for MediaFire links. You can use links you've
+found yourself, copied from bookmarks, or scraped beforehand.
+
+STEP 1: CREATE INPUT FILE
+--------------------------------------------------------------------------------
+
+Create a text file containing your MediaFire links. Each link should be on its
+own line. You can also use comma or space separated values.
+
+Example links.csv:
+--------------------------------------------------------------------------------
+https://www.mediafire.com/file/y1s9a51a941h7b8/The_Wasteland_%2528MP3%2529.mp3/file
+https://www.mediafire.com/folder/xb49obyqfut8d/Merlin_Das_Trevas
+https://www.mediafire.com/file/ngteu63n26rhncj/readmetxt4999251.zip/file
+--------------------------------------------------------------------------------
+
+STEP 2: CREATE OUTPUT DIRECTORY
+--------------------------------------------------------------------------------
+
+mf-dl cannot create directories itself. Create an output folder:
+
+    mkdir output
+
+STEP 3: RUN THE DOWNLOADER
+--------------------------------------------------------------------------------
+
+    python3 mfdl.py output links.csv
+
+The tool will create a folder structure matching the MediaFire folders and
+download all files into your output directory.
+
+
+PROTIP #1: INCREASE DOWNLOAD THROUGHPUT
+--------------------------------------------------------------------------------
+
+By default, mfdl.py runs 6 concurrent threads. Increase this to maximize
+bandwidth usage, or decrease if MediaFire shows captchas:
+
+    python3 mfdl.py --threads 10 output links.csv    # faster
+    python3 mfdl.py --threads 1 output links.csv     # if captchas appear
+
+
+PROTIP #2: MULTIPLE INPUT FILES
+--------------------------------------------------------------------------------
+
+All arguments after 'output' are treated as input files:
+
+    python3 mfdl.py output links1.csv links2.csv links3.csv
+
+
+PROTIP #3: ARCHIVE MODE
+--------------------------------------------------------------------------------
+
+Use archive mode for flat directory layout with complete metadata:
+
+    python3 mfdl.py --archive-mode archive links.csv
+
+This creates:
+- keys/*.info.json  (file metadata)
+- conv/*            (converted files)
+- custom_folders.txt (folder key mappings)
+
+
+================================================================================
+PART 2: SCRAPING MEDIAFIRE LINKS WITH WEB_CRAWLER.PY
+================================================================================
+
+web_crawler.py discovers MediaFire links on websites. It does NOT download
+files - only finds links. Run it separately from mfdl.py.
+
+STEP 1: CHOOSE A SEED URL
+--------------------------------------------------------------------------------
+
+Any site with downloadable content makes a good link farm. For this tutorial,
+we'll use https://mcpedl.com/ as an example.
+
+STEP 2: RUN THE CRAWLER
+--------------------------------------------------------------------------------
+
+    python3 web_crawler.py https://mcpedl.com/ links_found.txt
+
+The crawler runs indefinitely until you press Ctrl+C. It appends discovered
+links to the output file as it finds them.
+
+
+PROTIP #1: FEED LINKS BACK TO MFDL.PY
+--------------------------------------------------------------------------------
+
+You can run mfdl.py on links_found.txt to download new links as they're found:
+
+    python3 mfdl.py downloads links_found.txt
+
+Combine with cron for automated periodic downloads:
+
+
+PROTIP #2: LIMIT SEARCH SCOPE
+--------------------------------------------------------------------------------
+
+Use --filter to restrict crawling to a specific domain:
+
+    python3 web_crawler.py --filter https://mcpedl.com https://mcpedl.com/ links.txt
+
+This ignores out-links to Facebook, Twitter, etc.
+
+
+PROTIP #3: REGEX FILTERING
+--------------------------------------------------------------------------------
+
+Use --regex for advanced pattern matching:
+
+    python3 web_crawler.py --regex "mediafire.*\.zip" https://example.com/ links.txt
+
+
+PROTIP #4: THREAD CONTROL
+--------------------------------------------------------------------------------
+
+Adjust crawler threads (default is 6):
+
+    python3 web_crawler.py --threads 10 https://mcpedl.com/ links.txt
+
+
+================================================================================
+AUTOMATION WITH CRON
+================================================================================
+
+You can schedule periodic download jobs to grab new links automatically.
+
+Example crontab entry (run every hour):
+
+    0 * * * * cd /path/to/mf-dl && python3 mfdl.py downloads links_found.txt
+
+This way, you can keep web_crawler.py running continuously and periodically
+process new links without stopping it.
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+ISSUE: "Couldn't find download url" errors
+FIX:
+  - Try reducing threads: --threads 1
+  - MediaFire may have changed their page structure
+  - The file may have been deleted from MediaFire
+
+ISSUE: Captchas appearing
+FIX:
+  - Reduce thread count to 1
+  - Wait before retrying
+  - Download manually via browser if needed
+
+ISSUE: Files partially downloaded
+FIX:
+  - Re-run the downloader - it skips existing files
+  - Check disk space
+
+
+================================================================================
+CREDITS & FURTHER READING
+================================================================================
+
+Original Tool:   Pyxia (https://gitgud.io/Pyxia/mf-dl)
+Tutorial by:     themadprogramer (https://datahorde.org/)
+Archive Team:    https://archiveteam.org/index.php?title=MediaFire
+
+For more details on MediaFire's API, see docs/mediafire-api.txt
+
+
+================================================================================
