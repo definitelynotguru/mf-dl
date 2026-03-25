@@ -8,6 +8,27 @@ This project was originally created by **Pyxia** and published at [gitgud.io/Pyx
 
 If you have MediaFire links you want to archive at scale, consider submitting them to the [Archive Team](https://archiveteam.org/index.php?title=MediaFire).
 
+This is a fixed version of the old repo,
+● The Problem:
+  MediaFire changed their HTML page structure. The old code was looking for this text pattern before the download link:
+  Preparing your download...
+  <a class="input popsok" aria-label="Download file" href="
+
+  MediaFire removed the "Preparing your download..." text, so the old pattern never matched → all downloads failed with "Couldn't find download url".
+
+  The Fix:
+  Updated mfdl.py to look for the download link directly using the aria-label="Download file" attribute instead:
+
+  # Old pattern (broken):
+  download_link_prefix = '\nPreparing your download…\n<a class="input popsok" aria-label="Download file" href="'
+
+  # New pattern (works):
+  download_link_prefix = '<a class="input popsok"'
+  aria_label = 'aria-label="Download file"'
+
+  Then it finds the href after that aria-label to get the actual download URL. Also added fallback to try the legacy pattern for backwards compatibility.
+
+
 ## Features
 
 - Bulk download files from MediaFire links (files and folders)
@@ -169,3 +190,4 @@ This project is licensed under **GPL-3.0**. See [LICENSE](LICENSE) for details.
 - **Pyxia** - Original author ([gitgud.io/Pyxia/mf-dl](https://gitgud.io/Pyxia/mf-dl))
 - **themadprogramer** - Tutorial and documentation contributions ([Data Horde](https://datahorde.org/))
 - **Archive Team** - MediaFire archiving advocacy ([archiveteam.org](https://archiveteam.org/))
+- **aevum** - Making it so it matches the new pattern.
