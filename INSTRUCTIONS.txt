@@ -1,5 +1,5 @@
 ================================================================================
-                    HOW TO ARCHIVE OR SCRAPE MEDIAFIRE FILES USING MF-DL
+            HOW TO ARCHIVE OR SCRAPE MEDIAFIRE FILES USING MF-DL
 ================================================================================
 
 Written by themadprogramer | Published on Data Horde
